@@ -87,19 +87,17 @@ class UnifiToLoki:
 
     RESUME_TOKEN_FILE: str = 'resume_token.pkl'
 
-    LOKI_PORT: int = 3100
-
     def __init__(self):
         if 'MONGODB_CONN_STR' not in os.environ:
             raise RuntimeError(
                 'ERROR: Must set the MONGODB_CONN_STR environment variable.'
             )
         self.mongo_conn_str: str = os.environ['MONGODB_CONN_STR']
-        if 'LOKI_HOST' not in os.environ:
+        if 'LOKI_URL' not in os.environ:
             raise RuntimeError(
-                'ERROR: Must set the LOKI_HOST environment variable.'
+                'ERROR: Must set the LOKI_URL environment variable.'
             )
-        self.loki_host: str = os.environ['LOKI_HOST']
+        self.loki_url: str = os.environ['LOKI_URL']
         self.resume_token: Optional[Dict] = None
         if os.path.exists(self.RESUME_TOKEN_FILE):
             with open(self.RESUME_TOKEN_FILE, 'rb') as fh:
@@ -168,7 +166,6 @@ class UnifiToLoki:
             change['time'] = change['time'] / 1000
         ts = str(int(change['time']) * 1000000000)
         logger.debug(change)
-        url = f'http://{self.loki_host}:{self.LOKI_PORT}/loki/api/v1/push'
         flat: dict = flatten(change)
         payload = {
             'streams': [
@@ -181,8 +178,8 @@ class UnifiToLoki:
             ]
         }
         j = dumps(payload, cls=MagicEncoder)
-        logger.debug('POST to: %s', url)
-        resp = requests.post(url, data=j, headers={'Content-type': 'application/json'})
+        logger.debug('POST to: %s', self.loki_url)
+        resp = requests.post(self.loki_url, data=j, headers={'Content-type': 'application/json'})
         logger.debug('Loki responded HTTP %d: %s', resp.status_code, resp.text)
         try:
             resp.raise_for_status()
