@@ -186,7 +186,7 @@ class UnifiToLoki:
         except requests.exceptions.HTTPError:
             logger.error(
                 'POST to %s returned HTTP %d: %s\nwith payload: %s',
-                url, resp.status_code, resp.text, payload
+                self.loki_url, resp.status_code, resp.text, payload
             )
             raise
 
