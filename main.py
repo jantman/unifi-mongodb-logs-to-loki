@@ -100,8 +100,12 @@ class UnifiToLoki:
         self.loki_url: str = os.environ['LOKI_URL']
         self.resume_token: Optional[Dict] = None
         if os.path.exists(self.RESUME_TOKEN_FILE):
-            with open(self.RESUME_TOKEN_FILE, 'rb') as fh:
-                self.resume_token = pickle.load(fh)
+            try:
+                with open(self.RESUME_TOKEN_FILE, 'rb') as fh:
+                    self.resume_token = pickle.load(fh)
+            except Exception as ex:
+                logger.error('Failed to load resume token: %s', ex)
+                self.resume_token = None
         self.host: str
         if 'LOG_HOST' in os.environ:
             self.host = os.environ['LOG_HOST']
